@@ -1,0 +1,1 @@
+{"ast":null,"code":"import { MyReservationsComponent } from './my-reservations/my-reservations.component';\nexport const reservationsRoutes = [{\n  path: '',\n  component: MyReservationsComponent\n}];","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
