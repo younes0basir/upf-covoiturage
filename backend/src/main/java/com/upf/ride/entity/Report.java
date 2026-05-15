@@ -31,14 +31,14 @@ public class Report {
     private Trip trip;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "report_type", nullable = false)
+    @Column(nullable = false)
     private ReportType type = ReportType.OTHER;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "report_status")
+    @Column(nullable = false)
     private ReportStatus status = ReportStatus.PENDING;
 
     @CreationTimestamp

@@ -38,12 +38,12 @@ public class User {
     private String studentCardNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "gender", nullable = false)
+    @Column(nullable = false)
     private Gender gender;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "user_role")
+    @Column(nullable = false)
     private UserRole role = UserRole.STUDENT;
 
     @Builder.Default

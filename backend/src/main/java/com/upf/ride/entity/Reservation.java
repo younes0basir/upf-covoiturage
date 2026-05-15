@@ -32,7 +32,7 @@ public class Reservation {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "reservation_status")
+    @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.PENDING;
 
     @CreationTimestamp

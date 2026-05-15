@@ -56,7 +56,7 @@ public class Trip {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(name = "passenger_gender_preference", columnDefinition = "passenger_gender_preference")
+    @Column(name = "passenger_gender_preference", nullable = false)
     private PassengerGenderPreference passengerGenderPreference = PassengerGenderPreference.ANY;
 
     @Column(name = "distance_km", precision = 10, scale = 2)
@@ -70,7 +70,7 @@ public class Trip {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "trip_status")
+    @Column(name = "status", nullable = false)
     private TripStatus status = TripStatus.SCHEDULED;
 
     @Column(columnDefinition = "TEXT")
