@@ -64,19 +64,20 @@ const Layout = ({ children, hideNavbar = false, hideFooter = false }) => {
         {children}
       </main>
       {!hideFooter && (
-        <footer className="bg-[#0a0c10] border-t border-white/5 py-20 relative overflow-hidden">
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px] translate-y-1/2 translate-x-1/2"></div>
-          <div className="max-w-7xl mx-auto px-4 relative z-10">
-            <div className="grid md:grid-cols-4 gap-12 mb-16">
-              <div className="col-span-2">
-                  <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white">U</div>
-                      <span className="text-2xl font-black text-white tracking-tighter uppercase">UPF-RIDE</span>
+        <footer className="bg-gray-950 pt-20 pb-10 px-6 mt-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+              <div className="col-span-1 md:col-span-2">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-950">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   </div>
-                  <p className="text-gray-500 max-w-sm leading-relaxed font-medium">
-                      La plateforme officielle de covoiturage de l'Université Privée de Fès. 
-                      Rejoignez des milliers d'étudiants et changez votre façon de voyager.
-                  </p>
+                  <span className="text-white font-black tracking-[0.2em] text-lg uppercase">UPF-RIDE</span>
+                </div>
+                <p className="text-gray-400 font-medium max-w-sm leading-relaxed">
+                  La solution officielle de covoiturage pour la communauté de l'Université Privée de Fès. 
+                  Simplifiez vos déplacements quotidiens.
+                </p>
               </div>
               <div>
                   <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Plateforme</h4>
