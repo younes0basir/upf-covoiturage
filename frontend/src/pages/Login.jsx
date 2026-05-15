@@ -42,8 +42,9 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(formData);
-      navigate('/dashboard');
+      const data = await login(formData);
+      const role = data?.user?.role;
+      navigate(role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch (err) {
       setError('Email ou mot de passe incorrect');
     } finally {
