@@ -59,11 +59,7 @@ function App() {
             />
             <Route 
               path="/account" 
-              element={
-                <ProtectedRoute>
-                  <Account />
-                </ProtectedRoute>
-              } 
+              element={<Navigate to="/dashboard" replace />} 
             />
             <Route 
               path="/admin/*" 

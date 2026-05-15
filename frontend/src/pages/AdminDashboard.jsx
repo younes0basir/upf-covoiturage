@@ -10,6 +10,7 @@ import UsersTab from '../components/admin/UsersTab';
 import TripsTab from '../components/admin/TripsTab';
 import ReservationsTab from '../components/admin/ReservationsTab';
 import ReportsTab from '../components/admin/ReportsTab';
+import AccountTab from '../components/dashboard/AccountTab';
 
 // --- Custom Hooks ---
 const useReveal = (loading) => {
@@ -136,7 +137,12 @@ const AdminDashboard = () => {
   );
 
   return (
-    <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab} stats={stats}>
+    <AdminLayout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      stats={stats}
+      onAccountClick={setActiveTab}
+    >
       {loading ? (
         <PageLoader inline />
       ) : (
@@ -177,6 +183,10 @@ const AdminDashboard = () => {
               reports={reports} 
               onUpdateStatus={handleReportStatus} 
             />
+          )}
+
+          {activeTab === 'account' && (
+            <AccountTab />
           )}
         </div>
       )}

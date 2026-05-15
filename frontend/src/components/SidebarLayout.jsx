@@ -44,7 +44,7 @@ const SidebarItem = ({ icon, label, id, active, onClick, path, badge }) => {
   );
 };
 
-const UserMenu = ({ user, onLogout }) => {
+const UserMenu = ({ user, onLogout, onAccountClick }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -75,13 +75,25 @@ const UserMenu = ({ user, onLogout }) => {
               <p className="text-xs text-gray-500">Signed in as</p>
               <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
             </div>
-            <Link
-              to="/account"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Account Settings
-            </Link>
+            {onAccountClick ? (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onAccountClick('account');
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Account Settings
+              </button>
+            ) : (
+              <Link
+                to="/account"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Account Settings
+              </Link>
+            )}
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -113,7 +125,7 @@ const MobileMenuButton = ({ onClick }) => (
 );
 
 // --- Main Layout Component ---
-const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, subtitle }) => {
+const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, subtitle, onAccountClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -141,6 +153,7 @@ const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, su
   };
 
   const currentMenuItem = menuItems.find(i => i.id === activeTab);
+  const isAccountActive = activeTab === 'account' || location.pathname === '/account';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -190,21 +203,39 @@ const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, su
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-gray-100 space-y-2">
-          <Link
-            to="/account"
-            className={`
-              w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
-              ${location.pathname === '/account' 
-                ? 'bg-gray-100 text-gray-900' 
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }
-            `}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Account
-          </Link>
+          {onAccountClick ? (
+            <button
+              onClick={() => onAccountClick('account')}
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
+                ${isAccountActive 
+                  ? 'bg-gray-900 text-white shadow-lg' 
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Account
+            </button>
+          ) : (
+            <Link
+              to="/account"
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
+                ${isAccountActive 
+                  ? 'bg-gray-100 text-gray-900' 
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Account
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
@@ -234,7 +265,7 @@ const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, su
               </div>
             </div>
 
-            <UserMenu user={user} onLogout={handleLogout} />
+            <UserMenu user={user} onLogout={handleLogout} onAccountClick={onAccountClick} />
           </div>
 
           {/* Mobile Title */}
