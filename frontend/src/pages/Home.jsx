@@ -1,156 +1,264 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
+import { tripService } from '../api/tripService';
+import PageLoader from '../components/PageLoader';
 
-const FeatureCard = ({ icon, title, description, color }) => (
-  <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-2xl transition-all duration-500 group">
-    <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
-      {icon}
-    </div>
-    <h3 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">{title}</h3>
-    <p className="text-gray-500 leading-relaxed font-medium">{description}</p>
-  </div>
-);
+/**
+ * UPF RIDE HOMEPAGE - PREMIUM ACADEMIC VERSION
+ * Style: Academic & Professional (MIT/Stanford inspired)
+ */
+
+// --- REVEAL HOOK ---
+const useReveal = (loading) => {
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-visible');
+          entry.target.classList.remove('reveal-hidden');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const elements = document.querySelectorAll('.reveal-element');
+    elements.forEach(el => {
+      el.classList.add('reveal-hidden');
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [loading]);
+};
 
 const Home = () => {
   const { user } = useAuth();
+  const [recentTrips, setRecentTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useReveal(loading);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await tripService.searchTrips({ limit: 3 });
+        setRecentTrips(data || []);
+      } catch (error) {
+        console.error('Error fetching trips:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <PageLoader />;
 
   return (
     <Layout>
-      <div className="relative">
-        {/* Hero Section - Light & Pro */}
-        <div className="relative bg-[#fcfcfd] pt-32 pb-40 overflow-hidden border-b border-gray-100">
-          {/* Subtle Decorative elements */}
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 opacity-60"></div>
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-50 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 opacity-40"></div>
-          
-          <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-            <div className="text-center max-w-5xl mx-auto">
-              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-blue-50 border border-blue-100 mb-10 animate-fade-in shadow-sm">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-blue-600 animate-pulse"></span>
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700">Exclusivement pour l'UPF Fès</span>
-              </div>
-              
-              <h1 className="text-7xl md:text-9xl font-black text-gray-900 tracking-tighter mb-10 leading-[0.85]">
-                VOTRE MOBILITÉ <br />
-                <span className="text-blue-600">RE-PENSÉE.</span>
-              </h1>
-              
-              <p className="max-w-2xl mx-auto text-xl text-gray-500 mb-16 leading-relaxed font-medium">
-                La plateforme officielle de covoiturage de l'Université Privée de Fès. 
-                Une solution sûre, économique et écologique pour vos trajets quotidiens.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row justify-center gap-6 items-center">
-                {user ? (
+      <div className="min-h-screen bg-white">
+        {/* HERO SECTION */}
+        <header className="relative min-h-[90vh] flex items-center justify-center text-center px-6 overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=2070&auto=format&fit=crop"
+              alt="UPF Campus"
+              className="w-full h-full object-cover animate-float"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-white backdrop-blur-[1px]"></div>
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 w-full max-w-7xl mx-auto pt-20">
+            <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[10px] uppercase font-black tracking-[0.3em] rounded-full mb-8 reveal-element">
+              Université Privée de Fès
+            </div>
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-semibold text-white leading-[1.05] mb-6 max-w-5xl mx-auto drop-shadow-2xl reveal-element delay-100 tracking-tight">
+              La mobilité étudiante.<br />
+              <span className="text-blue-400 italic">Simplifiée.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-12 leading-relaxed drop-shadow reveal-element delay-200 font-medium">
+              Rejoignez la plateforme officielle de covoiturage de l'UPF. 
+              Une solution sécurisée pour connecter les étudiants et faciliter vos trajets.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-4 reveal-element delay-300">
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="px-10 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-95 shadow-xl shadow-black/20"
+                >
+                  Mon Tableau de Bord
+                </Link>
+              ) : (
+                <>
                   <Link
-                    to="/dashboard"
-                    className="bg-gray-900 text-white px-12 py-6 rounded-[2rem] text-lg font-black hover:bg-black transition shadow-2xl shadow-gray-200 transform active:scale-95 flex items-center gap-4"
+                    to="/register"
+                    className="px-10 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-600/20"
                   >
-                    Tableau de bord
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    Démarrer l'Aventure
                   </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/register"
-                      className="bg-blue-600 text-white px-12 py-6 rounded-[2rem] text-lg font-black hover:bg-blue-700 transition shadow-2xl shadow-blue-100 transform active:scale-95"
-                    >
-                      Démarrer maintenant
-                    </Link>
-                    <Link
-                      to="/trips"
-                      className="bg-white text-gray-900 border-2 border-gray-100 px-12 py-6 rounded-[2rem] text-lg font-black hover:bg-gray-50 transition transform active:scale-95"
-                    >
-                      Trouver un trajet
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="bg-transparent text-white border-2 border-white/20 px-10 py-5 rounded-2xl text-lg font-black hover:bg-white/5 transition backdrop-blur-sm transform active:scale-95"
-                    >
-                      Devenir membre
-                    </Link>
-                  </>
-                )}
+                  <Link
+                    to="/login"
+                    className="px-10 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 transition-all active:scale-95"
+                  >
+                    Se Connecter
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* MISSION STRIP */}
+        <section className="bg-[#f8fafc] py-24 px-6 border-y border-slate-100">
+          <div className="max-w-7xl mx-auto reveal-element">
+            <div className="grid md:grid-cols-[200px_1fr] gap-12 items-start">
+              <div className="text-7xl md:text-9xl font-black text-blue-100/80 leading-none select-none">
+                01
+              </div>
+              <div className="max-w-3xl">
+                <p className="text-2xl md:text-4xl font-medium text-slate-800 leading-tight italic tracking-tight">
+                  "Notre mission est de renforcer l'esprit communautaire de l'UPF tout en offrant une alternative de transport durable et économique pour chaque étudiant."
+                </p>
               </div>
             </div>
           </div>
-          
-          {/* Subtle line decoration */}
-          <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
-        </div>
+        </section>
 
-        {/* Stats Section */}
-        <div className="bg-[#0a0c10] pb-24 border-b border-gray-900">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { label: 'Étudiants actifs', value: '500+' },
-                { label: 'Trajets quotidiens', value: '40+' },
-                { label: 'Économies totales', value: '15k+ DH' },
-                { label: 'Réduction CO2', value: '2t+' },
-              ].map((stat, i) => (
-                <div key={i} className="text-center p-8 bg-gray-900/50 rounded-3xl border border-gray-800/50 backdrop-blur-md">
-                  <p className="text-3xl font-black text-white mb-1">{stat.value}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</p>
+        {/* RECENT TRIPS SECTION */}
+        <section className="py-32 px-6 max-w-7xl mx-auto">
+          <div className="reveal-element">
+            <div className="flex justify-between items-end mb-16">
+              <div>
+                <span className="text-xs uppercase tracking-[0.3em] font-black text-blue-600 border-b-2 border-blue-600 pb-2">
+                  Trajets Disponibles
+                </span>
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-6 tracking-tighter">Prochains départs.</h2>
+              </div>
+              <Link to="/trips" className="hidden md:block text-blue-600 font-black text-xs uppercase tracking-widest hover:underline">
+                Voir tous les trajets →
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-10 mb-16">
+              {recentTrips.length > 0 ? (
+                recentTrips.map((trip, i) => (
+                  <Link
+                    key={trip.id}
+                    to={`/trips/${trip.id}`}
+                    className="group flex flex-col bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 reveal-element"
+                    style={{ transitionDelay: `${i * 100}ms` }}
+                  >
+                    {/* Trip Info Header */}
+                    <div className="relative h-48 bg-slate-100 overflow-hidden">
+                      <img
+                        src={`https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop`}
+                        alt="Trip"
+                        className="w-full h-full object-cover ken-burns"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-white/90 backdrop-blur-md text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                          {trip.totalPrice} DH
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-8 flex flex-col flex-1">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-black border border-blue-100">
+                          {trip.driverName?.charAt(0) || 'U'}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conducteur</p>
+                          <p className="text-sm font-bold text-slate-800">{trip.driverName || 'Étudiant UPF'}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 mb-8">
+                        <div className="flex items-start gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5"></div>
+                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">{trip.departureLocationName}</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5"></div>
+                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">{trip.destinationLocationName}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                          {new Date(trip.departureTime).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                        </span>
+                        <span className="text-blue-600 font-black text-[11px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                          Réserver →
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-3 py-20 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200">
+                  <p className="text-slate-400 font-medium">Aucun trajet disponible pour le moment.</p>
+                  <Link to="/trips" className="text-blue-600 font-bold mt-4 inline-block hover:underline italic">Commencer une recherche</Link>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* Features Section */}
-        <div className="bg-gray-50 py-32">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-20">
-              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Pourquoi UPF-Ride ?</h2>
-              <p className="text-4xl font-black text-gray-900 tracking-tight">Plus qu'un trajet, une communauté.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <FeatureCard 
-                icon={<svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                title="Rapidité"
-                description="Réservez votre place en 3 clics et recevez une confirmation instantanée de votre conducteur."
-                color="bg-blue-50"
-              />
-              <FeatureCard 
-                icon={<svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                title="Économie"
-                description="Le covoiturage est la solution la plus économique pour vous rendre à l'université au quotidien."
-                color="bg-green-50"
-              />
-              <FeatureCard 
-                icon={<svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
-                title="Sécurité"
-                description="Seuls les étudiants de l'UPF avec une carte valide peuvent utiliser la plateforme."
-                color="bg-purple-50"
-              />
-            </div>
+            <Link to="/trips" className="md:hidden block text-center text-blue-600 font-black text-xs uppercase tracking-widest py-4 bg-slate-50 rounded-2xl">
+              Voir tous les trajets →
+            </Link>
           </div>
-        </div>
+        </section>
 
-        {/* CTA Section */}
-        <div className="bg-[#fcfcfd] py-32 px-6">
-          <div className="max-w-6xl mx-auto bg-white rounded-[3.5rem] p-16 md:p-24 text-center relative overflow-hidden shadow-2xl shadow-gray-100 border border-gray-100">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60"></div>
-            
-            <div className="relative z-10">
-              <h2 className="text-5xl md:text-7xl font-black text-gray-900 mb-10 tracking-tighter leading-none">Prêt à voyager <br /> intelligemment ?</h2>
-              <p className="text-gray-500 text-xl max-w-2xl mx-auto mb-16 font-medium">Rejoignez la plus grande communauté de mobilité étudiante à Fès dès aujourd'hui.</p>
-              <div className="flex flex-col sm:flex-row justify-center gap-6">
-                <Link to="/register" className="bg-blue-600 text-white px-12 py-6 rounded-[2rem] text-lg font-black hover:bg-blue-700 transition shadow-2xl shadow-blue-100 transform active:scale-95">
-                  Créer mon compte gratuit
-                </Link>
-                <Link to="/trips" className="bg-white text-gray-900 border-2 border-gray-100 px-12 py-6 rounded-[2rem] text-lg font-black hover:bg-gray-50 transition transform active:scale-95">
-                  Explorer les trajets
-                </Link>
+        {/* STATS STRIP */}
+        <section className="bg-slate-900 py-24 px-6 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 relative z-10">
+            {[
+              { label: 'Utilisateurs', value: '500+' },
+              { label: 'Trajets', value: '1.2k' },
+              { label: 'Campus', value: 'Fès' },
+              { label: 'Sécurité', value: '100%' },
+            ].map((stat, i) => (
+              <div key={i} className="reveal-element text-center" style={{ transitionDelay: `${i * 100}ms` }}>
+                <p className="text-4xl md:text-6xl font-black text-white mb-2 tracking-tighter">{stat.value}</p>
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">{stat.label}</p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        {/* JOIN THE COMMUNITY CTA */}
+        <section className="bg-white py-32 px-6 text-center">
+          <div className="max-w-4xl mx-auto reveal-element">
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-8 inline-block">Rejoignez-nous</span>
+            <h2 className="text-4xl md:text-7xl font-bold text-slate-900 mb-8 tracking-tighter leading-[0.9]">
+              Faites partie d'une mobilité intelligente.
+            </h2>
+            <p className="text-slate-500 text-lg md:text-2xl mb-16 max-w-2xl mx-auto font-medium leading-relaxed">
+              Nous construisons une communauté où chaque trajet est une opportunité de partage et d'économie.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-6">
+              <Link
+                to="/register"
+                className="px-12 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all active:scale-95 shadow-2xl shadow-blue-600/20"
+              >
+                Créer mon compte
+              </Link>
+              <Link
+                to="/trips"
+                className="px-12 py-5 bg-white border-2 border-slate-100 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-95"
+              >
+                Explorer les trajets
+              </Link>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </Layout>
   );

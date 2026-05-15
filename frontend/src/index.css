@@ -14,5 +14,48 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+/* --- REVEAL ANIMATIONS --- */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* --- CUSTOM EFFECTS --- */
+@keyframes float {
+  0% { transform: translateY(0px) scale(1.05); }
+  50% { transform: translateY(-15px) scale(1.1); }
+  100% { transform: translateY(0px) scale(1.05); }
+}
+
+.animate-float {
+  animation: float 20s ease-in-out infinite;
+}
+
+.ken-burns {
+  transition: transform 10s ease-out;
+}
+
+.group:hover .ken-burns {
+  transform: scale(1.1);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
 }

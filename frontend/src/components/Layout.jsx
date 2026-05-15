@@ -55,56 +55,58 @@ const VerificationBanner = () => {
   );
 };
 
-const Layout = ({ children }) => {
+const Layout = ({ children, hideNavbar = false, hideFooter = false }) => {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <VerificationBanner />
       <main className="flex-grow">
         {children}
       </main>
-      <footer className="bg-[#0a0c10] border-t border-white/5 py-20 relative overflow-hidden">
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px] translate-y-1/2 translate-x-1/2"></div>
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-2">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white">U</div>
-                    <span className="text-2xl font-black text-white tracking-tighter uppercase">UPF-RIDE</span>
-                </div>
-                <p className="text-gray-500 max-w-sm leading-relaxed font-medium">
-                    La plateforme officielle de covoiturage de l'Université Privée de Fès. 
-                    Rejoignez des milliers d'étudiants et changez votre façon de voyager.
-                </p>
+      {!hideFooter && (
+        <footer className="bg-[#0a0c10] border-t border-white/5 py-20 relative overflow-hidden">
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px] translate-y-1/2 translate-x-1/2"></div>
+          <div className="max-w-7xl mx-auto px-4 relative z-10">
+            <div className="grid md:grid-cols-4 gap-12 mb-16">
+              <div className="col-span-2">
+                  <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white">U</div>
+                      <span className="text-2xl font-black text-white tracking-tighter uppercase">UPF-RIDE</span>
+                  </div>
+                  <p className="text-gray-500 max-w-sm leading-relaxed font-medium">
+                      La plateforme officielle de covoiturage de l'Université Privée de Fès. 
+                      Rejoignez des milliers d'étudiants et changez votre façon de voyager.
+                  </p>
+              </div>
+              <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Plateforme</h4>
+                  <ul className="space-y-4 text-sm font-bold text-gray-500">
+                      <li><a href="/trips" className="hover:text-white transition">Chercher un trajet</a></li>
+                      <li><a href="/trips/create" className="hover:text-white transition">Publier un trajet</a></li>
+                      <li><a href="/dashboard" className="hover:text-white transition">Tableau de bord</a></li>
+                  </ul>
+              </div>
+              <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Contact</h4>
+                  <ul className="space-y-4 text-sm font-bold text-gray-500">
+                      <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                          contact@upf-ride.ma
+                      </li>
+                  </ul>
+              </div>
             </div>
-            <div>
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Plateforme</h4>
-                <ul className="space-y-4 text-sm font-bold text-gray-500">
-                    <li><a href="/trips" className="hover:text-white transition">Chercher un trajet</a></li>
-                    <li><a href="/trips/create" className="hover:text-white transition">Publier un trajet</a></li>
-                    <li><a href="/dashboard" className="hover:text-white transition">Tableau de bord</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Contact</h4>
-                <ul className="space-y-4 text-sm font-bold text-gray-500">
-                    <li className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                        contact@upf-ride.ma
-                    </li>
-                </ul>
+            <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                  &copy; {new Date().getFullYear()} UPF-RIDE — TOUS DROITS RÉSERVÉS
+              </p>
+              <div className="flex items-center gap-6">
+                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Réalisé par l'UPF</p>
+              </div>
             </div>
           </div>
-          <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                &copy; {new Date().getFullYear()} UPF-RIDE — TOUS DROITS RÉSERVÉS
-            </p>
-            <div className="flex items-center gap-6">
-                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Réalisé par l'UPF</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };
