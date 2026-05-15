@@ -55,8 +55,23 @@ public class ReservationService {
     public ReservationResponse updateStatus(UUID reservationId, ReservationStatus newStatus, String actorEmail) {
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
+        
+        ReservationStatus oldStatus = r.getStatus();
         r.setStatus(newStatus);
-        return toResponse(reservationRepository.save(r));
+        Reservation saved = reservationRepository.save(r);
+        
+        // Update trip seats if status changed to/from ACCEPTED
+        Trip trip = r.getTrip();
+        if (oldStatus != ReservationStatus.ACCEPTED && newStatus == ReservationStatus.ACCEPTED) {
+            trip.setAvailableSeats(trip.getAvailableSeats() - r.getSeatsReserved());
+            tripRepository.save(trip);
+        } else if (oldStatus == ReservationStatus.ACCEPTED && 
+                  (newStatus == ReservationStatus.CANCELLED || newStatus == ReservationStatus.REJECTED)) {
+            trip.setAvailableSeats(trip.getAvailableSeats() + r.getSeatsReserved());
+            tripRepository.save(trip);
+        }
+        
+        return toResponse(saved);
     }
 
     @Transactional
@@ -66,8 +81,16 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
         if (!r.getPassenger().getId().equals(passenger.getId()))
             throw new IllegalStateException("Action non autorisée");
+        
+        ReservationStatus oldStatus = r.getStatus();
         r.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(r);
+
+        if (oldStatus == ReservationStatus.ACCEPTED) {
+            Trip trip = r.getTrip();
+            trip.setAvailableSeats(trip.getAvailableSeats() + r.getSeatsReserved());
+            tripRepository.save(trip);
+        }
     }
 
     private ReservationResponse toResponse(Reservation r) {

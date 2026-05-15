@@ -100,13 +100,18 @@ const Icons = {
 // --- Reusable Components ---
 const StatusBadge = ({ status }) => {
   const config = {
+    // Trip Statuses
     OPEN: { label: 'Available', color: 'bg-green-50 text-green-700 border-green-200' },
     SCHEDULED: { label: 'Scheduled', color: 'bg-blue-50 text-blue-700 border-blue-200' },
     COMPLETED: { label: 'Completed', color: 'bg-gray-50 text-gray-600 border-gray-200' },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-50 text-red-700 border-red-200' }
+    CANCELLED: { label: 'Cancelled', color: 'bg-red-50 text-red-700 border-red-200' },
+    // Reservation Statuses
+    ACCEPTED: { label: 'Confirmed', color: 'bg-green-50 text-green-700 border-green-200' },
+    PENDING: { label: 'Pending', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    REJECTED: { label: 'Rejected', color: 'bg-red-50 text-red-700 border-red-200' }
   };
 
-  const { label, color } = config[status] || config.OPEN;
+  const { label, color } = config[status] || { label: status, color: 'bg-gray-50 text-gray-600 border-gray-200' };
   
   return (
     <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${color}`}>
@@ -519,13 +524,35 @@ const TripDetails = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {!isDriver && (
-              <BookingCard 
-                trip={trip}
-                seats={seats}
-                setSeats={setSeats}
-                onBook={handleBook}
-                reserving={reserving}
-              />
+              <div className="space-y-6">
+                {trip.reservations?.some(r => r.passenger.id === user?.id) ? (
+                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-24">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-sm font-bold text-gray-900">Your Booking</h3>
+                      <StatusBadge status={trip.reservations.find(r => r.passenger.id === user?.id).status} />
+                    </div>
+                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                      <p className="text-sm text-blue-700 font-medium">
+                        You have reserved {trip.reservations.find(r => r.passenger.id === user?.id).seatsReserved} seat(s) for this trip.
+                      </p>
+                    </div>
+                    <Link 
+                      to="/dashboard" 
+                      className="w-full block text-center py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg"
+                    >
+                      Go to Dashboard
+                    </Link>
+                  </div>
+                ) : (
+                  <BookingCard 
+                    trip={trip}
+                    seats={seats}
+                    setSeats={setSeats}
+                    onBook={handleBook}
+                    reserving={reserving}
+                  />
+                )}
+              </div>
             )}
             
             {user && !isDriver && (

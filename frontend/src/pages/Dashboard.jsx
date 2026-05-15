@@ -56,7 +56,10 @@ const Dashboard = () => {
         reservationService.getMyReservations(),
         tripService.getMyTrips().catch(() => [])
       ]);
-      setReservations(myRes);
+      const sortedRes = [...myRes].sort((a, b) => 
+        new Date(b.trip?.departureTime) - new Date(a.trip?.departureTime)
+      );
+      setReservations(sortedRes);
       setTrips(myTrips);
     } catch (err) {
       console.error('Failed to fetch data', err);
@@ -82,8 +85,10 @@ const Dashboard = () => {
       try {
         await reservationService.updateStatus(resId, status);
         await fetchData(false);
+        toast.success('Reservation updated successfully');
       } catch (err) {
         console.error('Error updating reservation', err);
+        toast.error(err.response?.data?.message || 'Error updating reservation');
       }
     };
 
@@ -104,8 +109,10 @@ const Dashboard = () => {
       try {
         await tripService.updateTripStatus(tripId, status);
         await fetchData(false);
+        toast.success('Trip updated successfully');
       } catch (err) {
         console.error('Error updating trip', err);
+        toast.error(err.response?.data?.message || 'Error updating trip');
       }
     };
     
