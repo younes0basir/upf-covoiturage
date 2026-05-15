@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import adminService from '../api/adminService';
 import AdminLayout from '../components/AdminLayout';
 import PageLoader from '../components/PageLoader';
@@ -36,6 +37,7 @@ const useReveal = (loading) => {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -76,55 +78,65 @@ const AdminDashboard = () => {
 
   // --- Handlers ---
   const handleDeleteUser = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    try {
-      await adminService.deleteUser(id);
-      setUsers(prev => prev.filter(u => u.id !== id));
-    } catch (err) { alert('Error deleting user'); }
+    toast.confirm('Voulez-vous vraiment supprimer cet utilisateur ?', async () => {
+      try {
+        await adminService.deleteUser(id);
+        setUsers(prev => prev.filter(u => u.id !== id));
+        toast.success('Utilisateur supprimé avec succès.');
+      } catch (err) { toast.error('Erreur lors de la suppression de l\'utilisateur'); }
+    });
   };
 
   const handleVerifyUser = async (id) => {
     try {
       const updated = await adminService.verifyUser(id);
       setUsers(prev => prev.map(u => u.id === id ? updated : u));
-    } catch (err) { alert('Error verifying user'); }
+      toast.success('Utilisateur vérifié.');
+    } catch (err) { toast.error('Erreur lors de la vérification de l\'utilisateur'); }
   };
 
   const handleToggleStatus = async (id) => {
     try {
       const updated = await adminService.toggleUserStatus(id);
       setUsers(prev => prev.map(u => u.id === id ? updated : u));
-    } catch (err) { alert('Error updating status'); }
+      toast.success('Statut de l\'utilisateur mis à jour.');
+    } catch (err) { toast.error('Erreur lors de la mise à jour du statut'); }
   };
 
   const handleRoleChange = async (id, role) => {
     try {
       const updated = await adminService.updateUserRole(id, role);
       setUsers(prev => prev.map(u => u.id === id ? updated : u));
-    } catch (err) { alert('Error updating role'); }
+      toast.success('Rôle de l\'utilisateur mis à jour.');
+    } catch (err) { toast.error('Erreur lors de la mise à jour du rôle'); }
   };
 
   const handleReportStatus = async (id, status) => {
     try {
       const updated = await adminService.updateReportStatus(id, status);
       setReports(prev => prev.map(r => r.id === id ? updated : r));
-    } catch (err) { alert('Error updating report'); }
+      toast.success('Statut du signalement mis à jour.');
+    } catch (err) { toast.error('Erreur lors de la mise à jour du signalement'); }
   };
   
   const handleDeleteTrip = async (id) => {
-    if (!window.confirm('Delete this trip?')) return;
-    try {
-      await adminService.deleteTrip(id);
-      setTrips(prev => prev.filter(t => t.id !== id));
-    } catch (err) { alert('Error deleting trip'); }
+    toast.confirm('Supprimer ce trajet ?', async () => {
+      try {
+        await adminService.deleteTrip(id);
+        setTrips(prev => prev.filter(t => t.id !== id));
+        toast.success('Trajet supprimé.');
+      } catch (err) { toast.error('Erreur lors de la suppression du trajet'); }
+    });
   };
 
   const handleDeleteReservation = async (id) => {
-    if (!window.confirm('Delete this reservation?')) return;
-    try {
-      await adminService.deleteReservation(id);
-      setReservations(prev => prev.filter(r => r.id !== id));
-    } catch (err) { alert('Error deleting reservation'); }
+    toast.confirm('Supprimer cette réservation ?', async () => {
+      try {
+        await adminService.deleteReservation(id);
+        setReservations(prev => prev.filter(r => r.id !== id));
+        toast.success('Réservation supprimée.');
+      } catch (err) { toast.error('Erreur lors de la suppression de la réservation'); }
+    });
   };
 
   // --- Filtering ---

@@ -4,6 +4,7 @@ import { tripService } from '../api/tripService';
 import { reservationService } from '../api/reservationService';
 import SidebarLayout from '../components/SidebarLayout';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 import PageLoader from '../components/PageLoader';
 
 // Modular Components
@@ -37,6 +38,7 @@ const useReveal = (loading) => {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [trips, setTrips] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,13 +78,19 @@ const Dashboard = () => {
       REJECTED: 'Are you sure you want to reject this reservation?'
     };
     
-    if (confirmMessages[status] && !window.confirm(confirmMessages[status])) return;
-    
-    try {
-      await reservationService.updateStatus(resId, status);
-      await fetchData(false);
-    } catch (err) {
-      console.error('Error updating reservation', err);
+    const execute = async () => {
+      try {
+        await reservationService.updateStatus(resId, status);
+        await fetchData(false);
+      } catch (err) {
+        console.error('Error updating reservation', err);
+      }
+    };
+
+    if (confirmMessages[status]) {
+      toast.confirm(confirmMessages[status], execute);
+    } else {
+      execute();
     }
   };
 
@@ -92,14 +100,16 @@ const Dashboard = () => {
       CANCELLED: 'Cancel this entire trip? This will affect all passengers.'
     };
     
-    if (!window.confirm(confirmMessages[status])) return;
+    const execute = async () => {
+      try {
+        await tripService.updateTripStatus(tripId, status);
+        await fetchData(false);
+      } catch (err) {
+        console.error('Error updating trip', err);
+      }
+    };
     
-    try {
-      await tripService.updateTripStatus(tripId, status);
-      await fetchData(false);
-    } catch (err) {
-      console.error('Error updating trip', err);
-    }
+    toast.confirm(confirmMessages[status], execute);
   };
 
   const contactUser = (person) => {

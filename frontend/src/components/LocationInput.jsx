@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { locationService } from '../api/locationService';
+import { useToast } from '../context/ToastContext';
 
 const LocationInput = ({ label, value, onChange, placeholder }) => {
+  const toast = useToast();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -111,7 +113,7 @@ const LocationInput = ({ label, value, onChange, placeholder }) => {
         onChange(newLoc.id, newLoc.name);
         setQuery(newLoc.name);
       } catch (err) {
-        alert("Erreur lors de l'enregistrement du nouveau lieu");
+        toast.error("Erreur lors de l'enregistrement du nouveau lieu");
       }
     } else {
       onChange(item.id, item.name);

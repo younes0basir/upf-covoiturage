@@ -238,7 +238,7 @@ const TripSearch = () => {
   const fetchTrips = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await tripService.getAllTrips();
+      const data = await tripService.searchTrips({});
       setTrips(data || []);
     } catch (err) {
       console.error('Failed to fetch trips', err);
