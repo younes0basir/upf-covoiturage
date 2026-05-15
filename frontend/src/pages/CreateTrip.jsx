@@ -60,6 +60,7 @@ const CreateTrip = () => {
     availableSeats: 1,
     driverPrice: '',
     passengerGenderPreference: 'ANY',
+    polyline: '',
     notes: ''
   });
 
@@ -194,6 +195,9 @@ const CreateTrip = () => {
         travelMode: window.google.maps.TravelMode.DRIVING
       }, (result, status) => {
         if (status === 'OK' && result.routes[0]) {
+          const encodedPath = result.routes[0].overview_polyline;
+          setFormData(prev => ({ ...prev, polyline: encodedPath }));
+          
           const path = result.routes[0].overview_path;
           const line = new window.google.maps.Polyline({
             path: path,

@@ -25,6 +25,7 @@ public class TripResponse {
     private BigDecimal distanceKm;
     private Integer estimatedDurationMinutes;
     private TripStatus status;
+    private String polyline;
     private String notes;
     private OffsetDateTime createdAt;
     private java.util.List<ReservationSummary> reservations;

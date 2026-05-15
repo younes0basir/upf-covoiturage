@@ -49,6 +49,7 @@ public class TripService {
                 .passengerGenderPreference(req.getPassengerGenderPreference())
                 .notes(req.getNotes())
                 .status(TripStatus.SCHEDULED)
+                .polyline(req.getPolyline())
                 .build();
 
         return toResponse(tripRepository.save(trip));
@@ -117,6 +118,7 @@ public class TripService {
                 .distanceKm(t.getDistanceKm())
                 .estimatedDurationMinutes(t.getEstimatedDurationMinutes())
                 .status(t.getStatus())
+                .polyline(t.getPolyline())
                 .notes(t.getNotes())
                 .createdAt(t.getCreatedAt())
                 .reservations(t.getReservations() != null ? t.getReservations().stream().map(r -> TripResponse.ReservationSummary.builder()

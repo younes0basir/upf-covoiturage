@@ -33,4 +33,5 @@ public class TripRequest {
     private PassengerGenderPreference passengerGenderPreference = PassengerGenderPreference.ANY;
 
     private String notes;
+    private String polyline;
 }

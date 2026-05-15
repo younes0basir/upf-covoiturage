@@ -53,6 +53,23 @@ const Home = () => {
     fetchData();
   }, []);
 
+  const getMapUrl = (trip) => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const { polyline, departureLocation, destinationLocation } = trip;
+    
+    const markers = [
+      `markers=color:blue|label:D|${departureLocation?.latitude},${departureLocation?.longitude}`,
+      `markers=color:red|label:A|${destinationLocation?.latitude},${destinationLocation?.longitude}`
+    ].join('&');
+
+    if (!polyline) {
+      if (!departureLocation?.latitude) return "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop";
+      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&${markers}&key=${apiKey}`;
+    }
+    
+    return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&path=enc:${polyline}&${markers}&key=${apiKey}&style=feature:all|element:labels.text.fill|color:0x333333|saturation:36|lightness:40&style=feature:all|element:labels.text.stroke|color:0xffffff|visibility:on|lightness:16`;
+  };
+
   if (loading) return <PageLoader />;
 
   return (
@@ -156,13 +173,13 @@ const Home = () => {
                     {/* Trip Info Header */}
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
                       <img
-                        src={`https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop`}
-                        alt="Trip"
-                        className="w-full h-full object-cover ken-burns"
+                        src={getMapUrl(trip)}
+                        alt="Route Map"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className="absolute top-4 left-4">
                         <span className="bg-white/90 backdrop-blur-md text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
-                          {trip.totalPrice} DH
+                          {trip.totalPrice || trip.driverPrice || '0'} DH
                         </span>
                       </div>
                     </div>
@@ -170,23 +187,29 @@ const Home = () => {
                     {/* Content */}
                     <div className="p-8 flex flex-col flex-1">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-black border border-blue-100">
-                          {trip.driverName?.charAt(0) || 'U'}
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xs font-black border border-blue-100 uppercase">
+                          {trip.driver?.firstName?.charAt(0) || trip.driverName?.charAt(0) || 'U'}
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conducteur</p>
-                          <p className="text-sm font-bold text-slate-800">{trip.driverName || 'Étudiant UPF'}</p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : (trip.driverName || 'Étudiant UPF')}
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-4 mb-8">
                         <div className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5"></div>
-                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">{trip.departureLocationName}</p>
+                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">
+                            {trip.departureLocation?.name || trip.departureLocationName || 'Lieu de départ'}
+                          </p>
                         </div>
                         <div className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5"></div>
-                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">{trip.destinationLocationName}</p>
+                          <p className="text-sm font-semibold text-slate-600 line-clamp-1">
+                            {trip.destinationLocation?.name || trip.destinationLocationName || 'Destination'}
+                          </p>
                         </div>
                       </div>
 
