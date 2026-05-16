@@ -1,34 +1,33 @@
 package com.upf.ride.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final WebClient resendClient;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.resend.from-email}")
     private String fromEmail;
+
+    public EmailService(@Value("${app.resend.api-key}") String apiKey) {
+        this.resendClient = WebClient.builder()
+                .baseUrl("https://api.resend.com")
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 
     @Async
     public void sendVerificationCode(String toEmail, String firstName, String code) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("UPF-Ride - Votre code de vérification");
-
             String html = """
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
@@ -57,9 +56,23 @@ public class EmailService {
                 </div>
                 """.formatted(firstName, code);
 
-            helper.setText(html, true);
-            mailSender.send(message);
-        } catch (MessagingException e) {
+            Map<String, Object> emailBody = Map.of(
+                "from", fromEmail,
+                "to", new String[]{toEmail},
+                "subject", "UPF-Ride - Votre code de vérification",
+                "html", html
+            );
+
+            String response = resendClient.post()
+                    .uri("/emails")
+                    .bodyValue(emailBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            log.info("Resend email sent to {}: {}", toEmail, response);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage());
             throw new RuntimeException("Erreur lors de l'envoi de l'email de vérification", e);
         }
     }
