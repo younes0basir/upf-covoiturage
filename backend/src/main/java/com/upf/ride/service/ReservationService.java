@@ -27,6 +27,12 @@ public class ReservationService {
         Trip trip = tripRepository.findById(req.getTripId())
                 .orElseThrow(() -> new IllegalArgumentException("Trajet introuvable"));
 
+        if (trip.getDriver().getUser().getId().equals(passenger.getId()))
+            throw new IllegalStateException("Vous ne pouvez pas réserver votre propre trajet");
+
+        if (trip.getStatus() != TripStatus.SCHEDULED)
+            throw new IllegalStateException("Ce trajet n'est plus disponible pour réservation");
+
         if (reservationRepository.existsByTripIdAndPassengerId(trip.getId(), passenger.getId()))
             throw new IllegalStateException("Vous avez déjà une réservation pour ce trajet");
 
@@ -53,25 +59,35 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse updateStatus(UUID reservationId, ReservationStatus newStatus, String actorEmail) {
+        User actor = userRepository.findByEmail(actorEmail).orElseThrow();
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
         
-        ReservationStatus oldStatus = r.getStatus();
-        r.setStatus(newStatus);
-        Reservation saved = reservationRepository.save(r);
-        
-        // Update trip seats if status changed to/from ACCEPTED
         Trip trip = r.getTrip();
-        if (oldStatus != ReservationStatus.ACCEPTED && newStatus == ReservationStatus.ACCEPTED) {
+        
+        // Security check: Only the driver of the trip can update reservation status
+        if (!trip.getDriver().getUser().getId().equals(actor.getId())) {
+            throw new IllegalStateException("Action non autorisée : seul le conducteur peut modifier le statut");
+        }
+
+        ReservationStatus oldStatus = r.getStatus();
+        
+        // Validation: Cannot accept if not enough seats
+        if (newStatus == ReservationStatus.ACCEPTED && oldStatus != ReservationStatus.ACCEPTED) {
+            if (trip.getAvailableSeats() < r.getSeatsReserved()) {
+                throw new IllegalStateException("Plus assez de places disponibles sur ce trajet");
+            }
             trip.setAvailableSeats(trip.getAvailableSeats() - r.getSeatsReserved());
             tripRepository.save(trip);
         } else if (oldStatus == ReservationStatus.ACCEPTED && 
                   (newStatus == ReservationStatus.CANCELLED || newStatus == ReservationStatus.REJECTED)) {
+            // Restore seats
             trip.setAvailableSeats(trip.getAvailableSeats() + r.getSeatsReserved());
             tripRepository.save(trip);
         }
-        
-        return toResponse(saved);
+
+        r.setStatus(newStatus);
+        return toResponse(reservationRepository.save(r));
     }
 
     @Transactional

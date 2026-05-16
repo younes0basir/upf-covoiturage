@@ -4,6 +4,7 @@ import com.upf.ride.dto.request.TripRequest;
 import com.upf.ride.dto.response.*;
 import com.upf.ride.entity.*;
 import com.upf.ride.entity.enums.TripStatus;
+import com.upf.ride.entity.enums.ReservationStatus;
 import com.upf.ride.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,16 @@ public class TripService {
 
         Vehicle vehicle = vehicleRepository.findById(req.getVehicleId())
                 .orElseThrow(() -> new IllegalArgumentException("Véhicule introuvable"));
+
+        // Validation: Seats cannot exceed vehicle capacity
+        if (req.getAvailableSeats() > vehicle.getSeats()) {
+            throw new IllegalArgumentException("Le nombre de places ne peut pas dépasser la capacité du véhicule (" + vehicle.getSeats() + ")");
+        }
+
+        // Validation: Departure time must be in the future
+        if (req.getDepartureTime().isBefore(OffsetDateTime.now().plusMinutes(30))) {
+            throw new IllegalArgumentException("Le départ doit être prévu au moins 30 minutes à l'avance");
+        }
 
         Location departure = locationRepository.findById(req.getDepartureLocationId())
                 .orElseThrow(() -> new IllegalArgumentException("Lieu de départ introuvable"));
@@ -83,9 +94,24 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new IllegalArgumentException("Trajet introuvable"));
         User user = userRepository.findByEmail(email).orElseThrow();
+        
         if (!trip.getDriver().getUser().getId().equals(user.getId()))
             throw new IllegalStateException("Action non autorisée");
+
+        TripStatus oldStatus = trip.getStatus();
         trip.setStatus(newStatus);
+        
+        // Cascade cancellation to reservations
+        if (newStatus == TripStatus.CANCELLED && oldStatus != TripStatus.CANCELLED) {
+            if (trip.getReservations() != null) {
+                trip.getReservations().forEach(res -> {
+                    if (res.getStatus() == ReservationStatus.PENDING || res.getStatus() == ReservationStatus.ACCEPTED) {
+                        res.setStatus(ReservationStatus.CANCELLED);
+                    }
+                });
+            }
+        }
+
         return toResponse(tripRepository.save(trip));
     }
 
