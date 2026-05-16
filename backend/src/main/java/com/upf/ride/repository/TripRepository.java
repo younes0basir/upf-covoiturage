@@ -32,6 +32,27 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
             @Param("seats") int seats
     );
 
+    /**
+     * Fuzzy city/name search — used by the AI when exact location IDs don't match.
+     * Matches trips where the departure city/name CONTAINS fromKeyword
+     * AND the destination city/name CONTAINS toKeyword (case-insensitive).
+     */
+    @Query("""
+            SELECT t FROM Trip t
+            WHERE t.status = 'SCHEDULED'
+              AND t.availableSeats >= :seats
+              AND (LOWER(t.departureLocation.name) LIKE LOWER(CONCAT('%', :from, '%'))
+                OR LOWER(t.departureLocation.city) LIKE LOWER(CONCAT('%', :from, '%')))
+              AND (LOWER(t.destinationLocation.name) LIKE LOWER(CONCAT('%', :to, '%'))
+                OR LOWER(t.destinationLocation.city) LIKE LOWER(CONCAT('%', :to, '%')))
+            ORDER BY t.departureTime ASC
+            """)
+    List<Trip> searchTripsByLocationName(
+            @Param("from") String fromKeyword,
+            @Param("to") String toKeyword,
+            @Param("seats") int seats
+    );
+
     @Query("SELECT t FROM Trip t WHERE t.driver.id = :driverId ORDER BY t.departureTime DESC")
     List<Trip> findAllByDriverId(@Param("driverId") UUID driverId);
 }

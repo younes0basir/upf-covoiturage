@@ -4,7 +4,22 @@ import axios from '../../api/axios';
 const OmniAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Bonjour, je suis votre assistant UPF-Ride. Comment puis-je vous aider ?' }
+    {
+      role: 'assistant',
+      content: 'Bonjour, que souhaitez-vous faire aujourd’hui ?',
+      quickActions: [
+        {
+          label: 'Publier un trajet',
+          description: 'Créer une annonce conducteur',
+          message: 'Je veux créer un trajet.'
+        },
+        {
+          label: 'Trouver un trajet',
+          description: 'Chercher une place disponible',
+          message: 'Je veux chercher un trajet.'
+        }
+      ]
+    }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -24,9 +39,14 @@ const OmniAssistant = () => {
 
   const postMessage = async (text, options = {}) => {
     const { showUserMessage = true } = options;
-
+    
+    const newUserMessage = { role: 'user', content: text };
+    
+    // Create the updated history immediately to avoid stale state issues
+    const currentHistory = messages.slice(1);
+    
     if (showUserMessage) {
-      setMessages(prev => [...prev, { role: 'user', content: text }]);
+      setMessages(prev => [...prev, newUserMessage]);
     }
 
     setInput('');
@@ -35,7 +55,7 @@ const OmniAssistant = () => {
     try {
       const response = await axios.post('/api/ai/chat', {
         message: text,
-        history: messages.slice(1)
+        history: currentHistory
       });
 
       const aiMessage = {
@@ -61,6 +81,10 @@ const OmniAssistant = () => {
     e.preventDefault();
     if (!input.trim()) return;
     postMessage(input.trim());
+  };
+
+  const handleQuickAction = (action) => {
+    postMessage(action.message);
   };
 
   const confirmTripCreation = (action) => {
@@ -136,26 +160,65 @@ const OmniAssistant = () => {
                 }`}>
                   {msg.content}
 
+                  {msg.quickActions && (
+                    <div className="mt-4 grid grid-cols-1 gap-2">
+                      {msg.quickActions.map(action => (
+                        <button
+                          key={action.label}
+                          type="button"
+                          onClick={() => handleQuickAction(action)}
+                          disabled={isTyping}
+                          className="group text-left bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 rounded-2xl p-3 transition disabled:opacity-60"
+                        >
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="min-w-0">
+                              <span className="block text-sm font-bold text-slate-900 group-hover:text-blue-700">
+                                {action.label}
+                              </span>
+                              <span className="block text-xs text-slate-500 mt-0.5">
+                                {action.description}
+                              </span>
+                            </span>
+                            <span className="w-8 h-8 rounded-xl bg-white border border-slate-100 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 flex items-center justify-center shrink-0 transition">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {msg.action?.type === 'SEARCH_TRIPS' && msg.action.data?.results && (
                     <div className="mt-4 space-y-3">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Trajets disponibles</p>
-                      {msg.action.data.results.map(trip => (
-                        <div key={trip.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                          <div className="flex justify-between items-start gap-3 mb-2">
-                            <span className="text-xs font-bold text-slate-900 truncate">{trip.driver.firstName}</span>
-                            <span className="text-blue-600 font-bold text-xs shrink-0">{trip.driverPrice} DH</span>
+                      {msg.action.data.results.length > 0 ? (
+                        msg.action.data.results.map(trip => (
+                          <div key={trip.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <div className="flex justify-between items-start gap-3 mb-2">
+                              <span className="text-xs font-bold text-slate-900 truncate">{trip.driver.firstName}</span>
+                              <span className="text-blue-600 font-bold text-xs shrink-0">{trip.driverPrice} DH</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {formatTripDate(trip.departureTime)}
+                            </div>
+                            <button className="w-full mt-3 py-2 bg-slate-900 text-white text-xs rounded-xl hover:bg-blue-600 transition">
+                              Reserver
+                            </button>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {formatTripDate(trip.departureTime)}
-                          </div>
-                          <button className="w-full mt-3 py-2 bg-slate-900 text-white text-xs rounded-xl hover:bg-blue-600 transition">
-                            Reserver
-                          </button>
+                        ))
+                      ) : (
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                          <svg className="w-8 h-8 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-xs text-slate-500 font-medium">Aucun trajet disponible pour le moment.</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
 

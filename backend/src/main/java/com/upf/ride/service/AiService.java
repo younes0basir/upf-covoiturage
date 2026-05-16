@@ -51,13 +51,34 @@ public class AiService {
         You are the UPF-Ride Omni-Agent, a helpful AI concierge for the University Privée de Fès (UPF).
         
         Available Actions:
-        1. SEARCH_TRIPS: params { destination, date }
+        1. SEARCH_TRIPS: params { destination, date, seats }
         2. CREATE_TRIP: params { departure, destination, date, time, seats, price, preferences }
         3. GET_MY_RIDES: no params
         
         Rules:
         - ALWAYS respond in JSON format containing 'thought', 'response', and 'action'.
         - Use French as the primary language for the 'response' field.
+        - Never ask the user to provide dates in ISO format. Convert natural dates yourself.
+        - If the user gives a date without a year, interpret it as the next upcoming matching date.
+
+        CRITICAL RULE FOR SEARCHING / TAKING TRIPS:
+        If the user wants to find, take, reserve, or search for a trip, this is PASSENGER mode.
+        In PASSENGER mode you MUST collect only:
+        1. Destination
+        2. Date
+        3. Number of seats the passenger wants
+        Do NOT ask for departure unless the user explicitly gives one; the default departure is UPF.
+        Do NOT ask for trip time.
+        Do NOT ask for available/free seats.
+        Do NOT ask for price.
+        Do NOT say "offrir" in PASSENGER mode.
+        Once destination, date, and seats are known, trigger SEARCH_TRIPS.
+        Example JSON for passenger search:
+        {
+          "thought": "The passenger wants to search for a ride.",
+          "response": "Je cherche les trajets disponibles.",
+          "action": { "type": "SEARCH_TRIPS", "data": { "destination": "Médina de Salé", "date": "2026-05-18", "seats": 1 } }
+        }
         
         CRITICAL RULE FOR CREATING TRIPS:
         If the user wants to create/publish a trip, DO NOT trigger any creation action immediately.
@@ -129,7 +150,8 @@ public class AiService {
         body.put("model", model);
         body.put("messages", messages);
         body.put("temperature", 0.1);
-        body.put("response_format", Map.of("type", "json_object"));
+        // Note: response_format json_object is NOT supported by all Nvidia NIM model variants.
+        // We rely on the system prompt + extractJson() instead.
 
         return client.post()
                 .uri("/chat/completions")
@@ -144,8 +166,15 @@ public class AiService {
                 .bodyToMono(Map.class)
                 .map(response -> {
                     try {
+                        log.debug("Raw Nvidia API response keys: {}", response.keySet());
                         List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-                        String content = (String) ((Map<String, Object>) choices.get(0).get("message")).get("content");
+                        if (choices == null || choices.isEmpty()) {
+                            log.error("Nvidia API returned no choices. Full response: {}", response);
+                            return AiResponse.builder().response("L'assistant AI n'a pas pu générer une réponse. Réessayez.").build();
+                        }
+                        String rawContent = (String) ((Map<String, Object>) choices.get(0).get("message")).get("content");
+                        log.debug("AI raw content: {}", rawContent);
+                        String content = extractJson(rawContent);
                         Map<String, Object> jsonResponse = objectMapper.readValue(content, Map.class);
                         
                         AiResponse aiResponse = new AiResponse();
@@ -168,16 +197,31 @@ public class AiService {
                             // AUTO-EXECUTE SEARCH
                             if ("SEARCH_TRIPS".equals(type) && params != null) {
                                 String destName = (String) params.get("destination");
-                                Optional<UUID> destId = locationResolver.resolve(destName);
-                                // Default departure from UPF
-                                Optional<UUID> fromId = locationResolver.resolve("UPF");
+                                String depName = (String) params.get("departure");
                                 
-                                if (destId.isPresent() && fromId.isPresent()) {
-                                    List<TripResponse> results = tripService.searchTrips(
-                                        fromId.get(), destId.get(), OffsetDateTime.now(), 1
-                                    );
-                                    actionResultData.put("results", results);
-                                }
+                                Optional<UUID> destId = locationResolver.resolve(destName != null ? destName : "Casablanca");
+                                Optional<UUID> fromId = locationResolver.resolve(depName != null ? depName : "UPF");
+                                
+                                OffsetDateTime searchDate = params.get("date") != null
+                                        ? parseDate(params.get("date")).atStartOfDay().atOffset(OffsetDateTime.now().getOffset())
+                                        : OffsetDateTime.now();
+                                int requestedSeats = params.get("seats") != null
+                                        ? parsePositiveInt(params.get("seats"), "nombre de places invalide")
+                                        : 1;
+                                
+                                log.info("SEARCH_TRIPS: from='{}' -> dest='{}'", depName, destName);
+
+                                // Use keyword search directly on location names/cities.
+                                // This is more reliable than UUID resolution because geocoding
+                                // creates new location IDs that don't match existing trip records.
+                                String fromKeyword = depName != null ? depName : "";
+                                String toKeyword = destName != null ? destName : "";
+
+                                List<TripResponse> results = tripService.searchTripsByKeyword(
+                                    fromKeyword, toKeyword, requestedSeats
+                                );
+                                log.info("SEARCH_TRIPS: found {} trips for '{}' -> '{}'", results.size(), fromKeyword, toKeyword);
+                                actionResultData.put("results", results);
                             } else if ("REQUEST_TRIP_CONFIRMATION".equals(type)) {
                                 // Just pass the data to the UI to render the interactive buttons
                                 actionResultData.putAll(params != null ? params : Map.of());
@@ -329,13 +373,17 @@ public class AiService {
         }
 
         java.util.regex.Matcher frenchDate = java.util.regex.Pattern
-                .compile("(\\d{1,2})\\s+(janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre)\\s+(\\d{4})")
+                .compile("(\\d{1,2})\\s+(janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre|january|february|march|april|may|june|july|august|september|october|november|december)(?:\\s+(\\d{4}))?")
                 .matcher(text);
         if (frenchDate.find()) {
             int day = Integer.parseInt(frenchDate.group(1));
             int month = frenchMonthNumber(frenchDate.group(2));
-            int year = Integer.parseInt(frenchDate.group(3));
-            return LocalDate.of(year, month, day);
+            int year = frenchDate.group(3) != null ? Integer.parseInt(frenchDate.group(3)) : LocalDate.now().getYear();
+            LocalDate parsed = LocalDate.of(year, month, day);
+            if (frenchDate.group(3) == null && parsed.isBefore(LocalDate.now())) {
+                parsed = parsed.plusYears(1);
+            }
+            return parsed;
         }
 
         return LocalDate.parse(text);
@@ -344,17 +392,18 @@ public class AiService {
     private int frenchMonthNumber(String month) {
         return switch (month) {
             case "janvier" -> 1;
-            case "fevrier", "février" -> 2;
-            case "mars" -> 3;
-            case "avril" -> 4;
-            case "mai" -> 5;
-            case "juin" -> 6;
-            case "juillet" -> 7;
-            case "aout", "août" -> 8;
-            case "septembre" -> 9;
-            case "octobre" -> 10;
-            case "novembre" -> 11;
-            case "decembre", "décembre" -> 12;
+            case "fevrier", "février", "february" -> 2;
+            case "mars", "march" -> 3;
+            case "avril", "april" -> 4;
+            case "mai", "may" -> 5;
+            case "juin", "june" -> 6;
+            case "juillet", "july" -> 7;
+            case "aout", "août", "august" -> 8;
+            case "septembre", "september" -> 9;
+            case "octobre", "october" -> 10;
+            case "novembre", "november" -> 11;
+            case "decembre", "décembre", "december" -> 12;
+            case "january" -> 1;
             default -> throw new IllegalArgumentException("date invalide");
         };
     }
@@ -404,5 +453,29 @@ public class AiService {
         } catch (Exception e) {
             throw new IllegalArgumentException("prix invalide");
         }
+    }
+
+    /**
+     * Extracts valid JSON from an LLM response that may be wrapped in markdown code fences.
+     * e.g. ```json { ... } ``` → { ... }
+     */
+    private String extractJson(String raw) {
+        if (raw == null || raw.isBlank()) return "{}";
+        String s = raw.trim();
+        // Strip markdown code fences
+        if (s.startsWith("```")) {
+            int start = s.indexOf('\n');
+            int end = s.lastIndexOf("```");
+            if (start != -1 && end > start) {
+                s = s.substring(start + 1, end).trim();
+            }
+        }
+        // Find first '{' and last '}' to extract the JSON object
+        int first = s.indexOf('{');
+        int last = s.lastIndexOf('}');
+        if (first != -1 && last != -1 && last > first) {
+            return s.substring(first, last + 1);
+        }
+        return s;
     }
 }

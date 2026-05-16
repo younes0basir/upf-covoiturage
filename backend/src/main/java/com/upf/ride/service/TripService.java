@@ -71,6 +71,11 @@ public class TripService {
                 .stream().map(this::toResponse).toList();
     }
 
+    public List<TripResponse> searchTripsByKeyword(String fromKeyword, String toKeyword, int seats) {
+        return tripRepository.searchTripsByLocationName(fromKeyword, toKeyword, seats)
+                .stream().map(this::toResponse).toList();
+    }
+
     public List<TripResponse> getAllScheduled() {
         return tripRepository.findByStatus(TripStatus.SCHEDULED)
                 .stream().map(this::toResponse).toList();

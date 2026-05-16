@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,18 +35,36 @@ public class LocationResolver {
         if (name == null || name.isBlank()) return Optional.empty();
 
         String trimmed = name.trim();
+        String query = canonicalizeAmbiguousLocation(trimmed);
 
         // 1. Try name/address match in local DB
-        List<Location> byName = locationRepository.findByNameContainingIgnoreCase(trimmed);
+        List<Location> byName = locationRepository.findByNameContainingIgnoreCase(query);
         if (!byName.isEmpty()) return Optional.of(byName.get(0).getId());
 
         // 2. Try city match
-        List<Location> byCity = locationRepository.findByCityIgnoreCase(trimmed);
+        List<Location> byCity = locationRepository.findByCityIgnoreCase(query);
         if (!byCity.isEmpty()) return Optional.of(byCity.get(0).getId());
 
         // 3. Geocode via Google Maps API
-        log.info("Location '{}' not found locally, geocoding via Google Maps.", trimmed);
-        return geocodeAndSave(trimmed);
+        log.info("Location '{}' not found locally, geocoding via Google Maps as '{}'.", trimmed, query);
+        return geocodeAndSave(query);
+    }
+
+    private String canonicalizeAmbiguousLocation(String query) {
+        String normalized = normalize(query);
+
+        if ((normalized.contains("fes") || normalized.contains("fez"))
+                && (normalized.contains("madina") || normalized.contains("medina"))) {
+            return "Fes el Bali, Fès";
+        }
+
+        return query;
+    }
+
+    private String normalize(String value) {
+        String withoutAccents = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return withoutAccents.toLowerCase().replaceAll("[^a-z0-9]+", " ").trim();
     }
 
     private Optional<UUID> geocodeAndSave(String query) {
