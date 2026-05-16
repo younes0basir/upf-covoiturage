@@ -71,6 +71,9 @@ public class AiService {
         
         You MUST NOT skip asking for the price.
         If the user answers the seats question with natural text like "1 place", "1 palce", "2 seats", or "one seat", extract the numeric value and continue. Do not reject it only because it contains words or a typo.
+        If the user gives only a date when you asked for date and time, keep that date and ask only for the missing time.
+        If the user gives a French date like "18 mai 2026", convert it to ISO format "2026-05-18" in action data.
+        If the user gives only a time when the date is missing, keep that time and ask only for the missing date.
         
         CRITICAL: While you are collecting this missing information, you MUST set the "action" field to null. Do NOT invent fake actions like "ASK_DEPARTURE".
         
@@ -133,6 +136,11 @@ public class AiService {
                 .header("Authorization", "Bearer " + apiKey)
                 .bodyValue(body)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
+                        response.bodyToMono(String.class)
+                                .defaultIfEmpty("empty response")
+                                .map(errorBody -> new IllegalStateException("Nvidia AI request failed: " + errorBody))
+                )
                 .bodyToMono(Map.class)
                 .map(response -> {
                     try {
@@ -199,6 +207,12 @@ public class AiService {
                         log.error("AI Error", e);
                         return AiResponse.builder().response("Désolé, erreur technique AI.").build();
                     }
+                })
+                .onErrorResume(e -> {
+                    log.error("AI provider request failed", e);
+                    return Mono.just(AiResponse.builder()
+                            .response("Désolé, l'assistant AI est momentanément indisponible. Vérifiez la configuration NVIDIA_API_KEY puis réessayez.")
+                            .build());
                 });
     }
 
@@ -302,14 +316,47 @@ public class AiService {
     }
 
     private LocalDate parseDate(Object value) {
-        String text = value.toString().trim().toLowerCase(Locale.ROOT);
+        String text = value.toString()
+                .trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll(",", " ")
+                .replaceAll("\\s+", " ");
         if (text.contains("demain") || text.equals("tomorrow")) {
             return LocalDate.now().plusDays(1);
         }
         if (text.contains("aujourd") || text.equals("today")) {
             return LocalDate.now();
         }
+
+        java.util.regex.Matcher frenchDate = java.util.regex.Pattern
+                .compile("(\\d{1,2})\\s+(janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre)\\s+(\\d{4})")
+                .matcher(text);
+        if (frenchDate.find()) {
+            int day = Integer.parseInt(frenchDate.group(1));
+            int month = frenchMonthNumber(frenchDate.group(2));
+            int year = Integer.parseInt(frenchDate.group(3));
+            return LocalDate.of(year, month, day);
+        }
+
         return LocalDate.parse(text);
+    }
+
+    private int frenchMonthNumber(String month) {
+        return switch (month) {
+            case "janvier" -> 1;
+            case "fevrier", "février" -> 2;
+            case "mars" -> 3;
+            case "avril" -> 4;
+            case "mai" -> 5;
+            case "juin" -> 6;
+            case "juillet" -> 7;
+            case "aout", "août" -> 8;
+            case "septembre" -> 9;
+            case "octobre" -> 10;
+            case "novembre" -> 11;
+            case "decembre", "décembre" -> 12;
+            default -> throw new IllegalArgumentException("date invalide");
+        };
     }
 
     private LocalTime parseTime(Object value) {
