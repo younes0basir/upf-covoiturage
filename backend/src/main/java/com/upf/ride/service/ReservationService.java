@@ -4,6 +4,7 @@ import com.upf.ride.dto.request.ReservationRequest;
 import com.upf.ride.dto.response.ReservationResponse;
 import com.upf.ride.entity.*;
 import com.upf.ride.entity.enums.ReservationStatus;
+import com.upf.ride.entity.enums.TripStatus;
 import com.upf.ride.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

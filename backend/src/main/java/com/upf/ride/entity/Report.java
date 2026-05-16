@@ -30,6 +30,7 @@ public class Report {
     @JoinColumn(name = "trip_id")
     private Trip trip;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportType type = ReportType.OTHER;
@@ -37,6 +38,7 @@ public class Report {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportStatus status = ReportStatus.PENDING;

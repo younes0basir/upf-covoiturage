@@ -12,6 +12,7 @@ import { Icons, ContactModal } from '../components/dashboard/DashboardUI';
 import PassengerTab from '../components/dashboard/PassengerTab';
 import DriverTab from '../components/dashboard/DriverTab';
 import AccountTab from '../components/dashboard/AccountTab';
+import ChatWindow from '../components/dashboard/ChatWindow';
 
 // --- Custom Hooks ---
 const useReveal = (loading) => {
@@ -45,6 +46,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('passenger');
   const [contactPerson, setContactPerson] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [activeChat, setActiveChat] = useState(null);
 
   useReveal(loading);
 
@@ -97,6 +99,13 @@ const Dashboard = () => {
     } else {
       execute();
     }
+  };
+
+  const handleOpenChat = (trip) => {
+    setActiveChat({
+      id: trip.id,
+      title: `${trip.departureLocation.name} → ${trip.destinationLocation.name}`
+    });
   };
 
   const handleUpdateTripStatus = async (tripId, status) => {
@@ -184,6 +193,7 @@ const Dashboard = () => {
                 reservations={reservations} 
                 onUpdateStatus={handleUpdateResStatus} 
                 onContactUser={contactUser} 
+                onOpenChat={handleOpenChat}
               />
             )}
             {activeTab === 'driver' && (
@@ -192,6 +202,7 @@ const Dashboard = () => {
                 onUpdateTripStatus={handleUpdateTripStatus} 
                 onUpdateResStatus={handleUpdateResStatus} 
                 onContactUser={contactUser} 
+                onOpenChat={handleOpenChat}
               />
             )}
             {activeTab === 'account' && (
@@ -208,14 +219,15 @@ const Dashboard = () => {
         onConfirm={() => setShowContactModal(false)}
       />
 
-      <style jsx>{`
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slide-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+      <style>{`
+        @keyframes slide-in {
+          from { transform: translateX(-10px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
-        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+        @keyframes slide-up {
+          from { transform: translateY(10px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
         .animate-slide-in { animation: slide-in 0.3s ease-out; }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         .reveal-hidden {
@@ -225,6 +237,13 @@ const Dashboard = () => {
         }
         .reveal-visible { opacity: 1; transform: translateY(0); }
       `}</style>
+      {activeChat && (
+        <ChatWindow 
+          tripId={activeChat.id}
+          tripTitle={activeChat.title}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
     </SidebarLayout>
   );
 };

@@ -27,9 +27,11 @@ public class DriverProfile {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    @Builder.Default
     @Column(name = "average_rating", precision = 3, scale = 2)
     private BigDecimal averageRating = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(name = "total_rides")
     private Integer totalRides = 0;
 

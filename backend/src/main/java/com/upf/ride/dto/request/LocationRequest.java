@@ -18,5 +18,6 @@ public class LocationRequest {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String googlePlaceId;
+    @Builder.Default
     private Boolean isUniversity = false;
 }

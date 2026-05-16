@@ -2,7 +2,7 @@ import React from 'react';
 import TripRouteMap from '../TripRouteMap';
 import { Icons, StatusBadge, EmptyState } from './DashboardUI';
 
-const DriverTab = ({ trips, onUpdateTripStatus, onUpdateResStatus, onContactUser }) => {
+const DriverTab = ({ trips, onUpdateTripStatus, onUpdateResStatus, onContactUser, onOpenChat }) => {
   if (trips.length === 0) {
     return (
       <EmptyState
@@ -57,7 +57,14 @@ const DriverTab = ({ trips, onUpdateTripStatus, onUpdateResStatus, onContactUser
               <div className="text-right">
                 <StatusBadge status={trip.status} />
                 {trip.status === 'SCHEDULED' && (
-                  <div className="flex gap-3 mt-4">
+                  <div className="flex flex-wrap justify-end gap-3 mt-4">
+                    <button 
+                      onClick={() => onOpenChat(trip)}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-blue-700 transition shadow-md"
+                    >
+                      <Icons.Message />
+                      Group Chat
+                    </button>
                     <button 
                       onClick={() => onUpdateTripStatus(trip.id, 'COMPLETED')}
                       className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-black transition shadow-md"
@@ -127,7 +134,14 @@ const DriverTab = ({ trips, onUpdateTripStatus, onUpdateResStatus, onContactUser
                     )}
 
                     {res.status === 'ACCEPTED' && (
-                      <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-gray-100">
+                        <button 
+                          onClick={() => onOpenChat(trip)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg text-xs font-semibold uppercase tracking-wider hover:bg-blue-700 transition shadow-md"
+                        >
+                          <Icons.Message />
+                          Message
+                        </button>
                         <button 
                           onClick={() => onContactUser(res.passenger)}
                           className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-3 rounded-lg text-xs font-semibold uppercase tracking-wider hover:bg-blue-100 transition"

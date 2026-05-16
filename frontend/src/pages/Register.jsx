@@ -527,7 +527,7 @@ const Register = () => {
       </div>
 
       {/* Animation Styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes slide-down {
           from {
             opacity: 0;

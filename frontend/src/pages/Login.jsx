@@ -347,7 +347,7 @@ const Login = () => {
       </div>
 
       {/* Add animation styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes slide-down {
           from {
             opacity: 0;

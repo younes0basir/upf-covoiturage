@@ -74,18 +74,18 @@ const TripRouteMap = ({ departure, destination, height = 'h-64' }) => {
         });
 
         // Fit bounds
-        const bounds = new LatLngBounds();
+        const bounds = new window.google.maps.LatLngBounds();
         bounds.extend({ lat: depLat, lng: depLng });
         bounds.extend({ lat: destLat, lng: destLng });
         map.fitBounds(bounds, 40);
 
         // Draw driving route
-        const directionsService = new DirectionsService();
+        const directionsService = new window.google.maps.DirectionsService();
         directionsService.route(
           {
             origin: { lat: depLat, lng: depLng },
             destination: { lat: destLat, lng: destLng },
-            travelMode: TravelMode.DRIVING,
+            travelMode: window.google.maps.TravelMode.DRIVING,
           },
           (result, status) => {
             if (status === 'OK' && result.routes[0]) {

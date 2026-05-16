@@ -26,6 +26,7 @@ public class Location {
     @Column(name = "formatted_address", columnDefinition = "TEXT")
     private String formattedAddress;
 
+    @Builder.Default
     @Column(length = 100)
     private String city = "Fès";
 
@@ -38,6 +39,7 @@ public class Location {
     @Column(name = "google_place_id", length = 255)
     private String googlePlaceId;
 
+    @Builder.Default
     @Column(name = "is_university")
     private Boolean isUniversity = false;
 

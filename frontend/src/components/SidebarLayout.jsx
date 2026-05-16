@@ -285,7 +285,7 @@ const SidebarLayout = ({ children, activeTab, setActiveTab, menuItems, title, su
       </main>
 
       {/* Animation Styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

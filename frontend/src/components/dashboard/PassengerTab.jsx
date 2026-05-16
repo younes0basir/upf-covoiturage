@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import TripRouteMap from '../TripRouteMap';
 import { Icons, StatusBadge, DateBadge, EmptyState } from './DashboardUI';
 
-const PassengerTab = ({ reservations, onUpdateStatus, onContactUser }) => {
+const PassengerTab = ({ reservations, onUpdateStatus, onContactUser, onOpenChat }) => {
   if (reservations.length === 0) {
     return (
       <EmptyState
@@ -67,7 +67,14 @@ const PassengerTab = ({ reservations, onUpdateStatus, onContactUser }) => {
                 </div>
                 
                 {res.status === 'ACCEPTED' && (
-                  <div className="flex gap-3 w-full lg:w-auto">
+                  <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                    <button 
+                      onClick={() => onOpenChat(res.trip)}
+                      className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-blue-700 transition shadow-md"
+                    >
+                      <Icons.Message />
+                      Message
+                    </button>
                     <button 
                       onClick={() => onContactUser(res.trip.driver)}
                       className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-black transition shadow-md"

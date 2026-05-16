@@ -83,10 +83,10 @@ public class TripService {
 
     public List<TripResponse> getMyTripsAsDriver(String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
-        DriverProfile driver = driverProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new IllegalStateException("Profil conducteur introuvable"));
-        return tripRepository.findAllByDriverId(driver.getId())
-                .stream().map(this::toResponse).toList();
+        return driverProfileRepository.findByUserId(user.getId())
+                .map(driver -> tripRepository.findAllByDriverId(driver.getId())
+                        .stream().map(this::toResponse).toList())
+                .orElse(java.util.Collections.emptyList());
     }
 
     @Transactional
