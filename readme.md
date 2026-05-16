@@ -1,275 +1,112 @@
-# UPF Fès Student Carpooling App
+# UPF-Ride 🚗🎓
 
-A university carpooling platform for students of UPF Fès.  
-The application allows students to publish rides, search available trips, reserve seats, share transport costs, and rate each other after completed trips.
+**The Smart University Carpooling Platform for UPF Fès.**
 
----
-
-## Project Objective
- 
-The goal of this project is to create a secure and smart carpooling system for university students.
-
-The platform mainly focuses on rides:
-
-- From home to UPF Fès
-- From UPF Fès back home
-- To other destinations when needed.
-
-This solution helps  students reduce transportation costs, improve mobility, and create a trusted student ride-sharing community.
+UPF-Ride is a modern, full-stack carpooling solution designed specifically for the student community of the Private University of Fès. It combines cutting-edge AI, real-time communication, and premium design to make student mobility safer, cheaper, and smarter.
 
 ---
 
-## Technologies Used
+## ✨ Key Innovations
 
-### Frontend
+### 🧠 OmniAssistant (AI Search)
+Powered by **Nvidia NIM & Llama 3.1 8B**, our intelligent assistant allows students to find rides using natural language. Just type *"I need a ride to Casa tomorrow morning"* and Omni handles the complex search logic for you.
 
-- React
-- Vite
-- Tailwind CSS
-- Axios
-- React Router
-- Google Maps API
+### 💬 Real-time Messaging
+Direct, instantaneous communication between drivers and passengers. Coordinate pickup points and times without leaving the platform.
 
-### Backend
+### 🗺️ Morocco Explorer
+A dedicated experience for discovering inter-city trips across Morocco, helping students travel home or explore the country during weekends.
 
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- Spring Data JPA
-- REST API
-
-### Database
-
-- PostgreSQL
+### 💎 Premium Design System
+A state-of-the-art UI featuring:
+- **Glassmorphism** aesthetics.
+- **University Portal** design language.
+- **Dynamic Micro-animations** for a smooth user experience.
+- **Google Maps Integration** for precise location and route tracking.
 
 ---
 
-## Main Features
+## 🛠️ Technology Stack
 
-### Authentication
+### 🚀 Production Stack
 
-- Student registration
-- Student login
-- JWT authentication
-- Secure password storage
-- Role-based access
+| Layer | Technology | Provider |
+| :--- | :--- | :--- |
+| **Frontend** | React, Vite, Tailwind CSS | **Vercel** |
+| **Backend** | Spring Boot 3, Java 21, Security, JWT | **Render (Docker)** |
+| **Database** | PostgreSQL | **Neon Serverless** |
+| **AI** | Llama 3.1 8B (Nvidia NIM API) | **Nvidia** |
+| **Email** | REST API Verification | **Resend** |
 
-### User Profiles
+### 💻 Development Tools
 
-- Student profile
-- Gender: MALE or FEMALE
-- Phone number
-- Student card number
-- Verified account status
+**Frontend**
+- **React 18 & Vite**: Fast development and optimized builds.
+- **Tailwind CSS**: Modern, utility-first styling.
+- **Google Maps API**: Advanced geolocation and routing.
+- **Axios**: Secure API communication.
+- **Lucide React**: Premium iconography.
 
-### Driver Features
+**Backend**
+- **Spring Boot 3.2**: Robust enterprise-grade framework.
+- **Spring Security & JWT**: Industry-standard authentication.
+- **Spring Data JPA**: Efficient database management.
+- **Docker**: Containerized deployment for environment parity.
+- **Lombok**: Clean, concise Java code.
 
-Drivers can:
-
-- Create a driver profile
-- Add vehicle information
-- Publish trips
-- Manage reservations
-- Accept or reject passengers
-- Complete or cancel trips
-
-### Passenger Features
-
-Passengers can:
-
-- Search available trips
-- View trip details
-- Reserve seats
-- Cancel reservations
-- Rate drivers after completed rides
-
-### Trip Management
-
-Each trip contains:
-
-- Departure location
-- Destination location
-- Departure time
-- Available seats
-- Driver contribution price
-- Optional service fee
-- Total price
-- Trip status
-- Google Maps route data
-
-### Safety Features
-
-- Female-only ride option
-- Verified student accounts
-- Driver and vehicle information
-- Ratings and reviews
-- Reservation history
-
-### Google Maps Integration
-
-The app will use Google Maps API for:
-
-- Address autocomplete
-- Route display
-- Distance calculation
-- Estimated duration
-- Latitude and longitude storage
-- Google Place ID storage
+**Database**
+- **PostgreSQL**: Reliable relational data storage.
+- **Hibernate**: Powerful Object-Relational Mapping (ORM).
 
 ---
 
-## User Roles
+## 🚀 Key Features
 
-### Student
+### 🛡️ Security & Trust
+- **Email Verification**: Secure registration via Resend.
+- **Academic Restriction**: Exclusive access for `@upf.ac.ma` domains.
+- **Verified Profiles**: Student card validation and driver license checks.
+- **Female-Only Rides**: Enhanced safety options for female students.
 
-A student can:
-
-- Register and login
-- Search rides
-- Reserve seats
-- Become a driver
-- Rate other users
-
-### Driver
-
-A driver is also a student who can:
-
-- Add vehicle information
-- Publish trips
-- Manage ride reservations
-
-### Admin
-
-An admin can:
-
-- Manage users
-- Monitor trips
-- Moderate ratings or reports
-- Verify student accounts
+### 🚗 Trip Management
+- **Smart Routing**: Distance and duration calculation via Google Maps.
+- **Reservation Workflow**: Interactive status management (Pending → Accepted → Completed).
+- **Seat Tracking**: Automatic seat decrementing upon booking.
+- **History & Ratings**: Comprehensive feedback system to build trust.
 
 ---
 
-## Database Overview
+## 📦 Deployment & Setup
 
-Main tables:
+### Environment Variables Required
 
-- `users`
-- `driver_profiles`
-- `vehicles`
-- `locations`
-- `trips`
-- `reservations`
-- `ratings`
-
----
-
-## Smart Database Rules
-
-The system should enforce these rules:
-
-- A passenger cannot reserve their own trip
-- A reservation cannot exceed available seats
-- A driver must have a vehicle before creating a trip
-- A user can reserve only once per trip
-- Female-only trips can only be reserved by female students
-- Ratings are allowed only after the trip is completed
-- A trip departure and destination cannot be the same
-
----
-
-## Trip Status Values
-
-```txt
-SCHEDULED
-IN_PROGRESS
-COMPLETED
-CANCELLED
-```
-
----
-
-## Reservation Status Values
-
-```txt
-PENDING
-ACCEPTED
-REJECTED
-CANCELLED
-COMPLETED
-```
-
----
-
-## Driver Role
-
-A student becomes a driver by creating a `driver_profile` linked to their account.
-Their `user_role` stays `STUDENT` — the driver capability is determined by the existence of a `driver_profile`, not by the role field.
-
----
-
-## Business Rule Enforcement
-
-| Rule | Enforced At |
-|---|---|
-| Passenger cannot reserve their own trip | Database (trigger) |
-| Reservation cannot exceed available seats | Database (trigger) |
-| Ratings only after a completed trip | Database (trigger) |
-| `available_seats` decremented on acceptance | Database (trigger) |
-| `average_rating` recalculated on new rating | Database (trigger) |
-| `total_rides` incremented on trip completion | Database (trigger) |
-| `updated_at` auto-refreshed on row update | Database (trigger) |
-| Female-only trips for female passengers only | Application layer |
-| Driver must have a vehicle before creating a trip | Application layer |
-| Unique reservation per passenger per trip | Database (UNIQUE constraint) |
-| Trip departure ≠ destination | Database (CHECK constraint) |
-
----
-
-## Setup & Installation
-
-### Prerequisites
-
-- Java 17+
-- Node.js 18+
-- PostgreSQL 13+
-- Google Maps API key
-
-### 1. Database
-
-```bash
-psql -U <user> -d <database> -f database.sql
-```
-
-### 2. Backend
-
-Configure `src/main/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/<database>
-spring.datasource.username=<user>
-spring.datasource.password=<password>
-jwt.secret=<your-jwt-secret>
-google.maps.api.key=<your-google-maps-key>
-```
-
-Run:
-
-```bash
-mvn spring-boot:run
-```
-
-### 3. Frontend
-
-Create `.env` in the frontend directory:
-
+**Backend (.env)**
 ```env
-VITE_API_BASE_URL=http://localhost:8080
-VITE_GOOGLE_MAPS_API_KEY=<your-google-maps-key>
+DB_URL=jdbc:postgresql://your-neon-url
+DB_USERNAME=your-username
+DB_PASSWORD=your-password
+JWT_SECRET=your-secure-secret
+NVIDIA_API_KEY=your-nvidia-key
+RESEND_API_KEY=your-resend-key
+ALLOWED_ORIGINS=your-vercel-url
 ```
 
-Install and run:
-
-```bash
-npm install
-npm run dev
+**Frontend (.env)**
+```env
+VITE_API_BASE_URL=https://your-render-url.com
+VITE_GOOGLE_MAPS_API_KEY=your-maps-key
 ```
+
+### Local Development
+1. **Backend**: `.\mvnw spring-boot:run`
+2. **Frontend**: `npm run dev`
+3. **Docker**: `docker build -t upf-ride .`
+
+---
+
+## 📊 Database Architecture
+The system uses a robust schema with 10+ tables including `users`, `trips`, `messages`, `ratings`, and `vehicles`, with complex business logic enforced via application-level validation and database constraints.
+
+---
+
+© 2025 UPF-Ride - Université Privée de Fès. All rights reserved.
