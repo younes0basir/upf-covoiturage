@@ -38,6 +38,11 @@ const OmniAssistant = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      // Notify dashboard to refresh if a trip was created
+      if (aiMessage.action?.type === 'CREATE_TRIP' && aiMessage.action?.data?.createdTrip) {
+        window.dispatchEvent(new CustomEvent('omni:trip-created'));
+      }
       
     } catch (error) {
       console.error("AI Error:", error);
@@ -48,6 +53,40 @@ const OmniAssistant = () => {
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const sendSystemMessage = async (text) => {
+    const userMessage = { role: 'user', content: text };
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+
+    try {
+      const response = await axios.post('/api/ai/chat', {
+        message: text,
+        history: messages.slice(1) // exclude initial welcome
+      });
+
+      const aiMessage = { 
+        role: 'assistant', 
+        content: response.data.response,
+        action: response.data.action
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      if (aiMessage.action?.type === 'CREATE_TRIP' && aiMessage.action?.data?.createdTrip) {
+        window.dispatchEvent(new CustomEvent('omni:trip-created'));
+      }
+    } catch (error) {
+      console.error("AI Error:", error);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const confirmTripCreation = (action) => {
+    action.completed = true;
+    sendSystemMessage(`[SYSTEM_CONFIRM] ${JSON.stringify(action.data || {})}`);
   };
 
   return (
@@ -110,11 +149,75 @@ const OmniAssistant = () => {
                     </div>
                   )}
 
-                  {msg.action && !msg.action.data?.results && (
+                  {/* Render Created Trip Success */}
+                  {msg.action?.type === 'CREATE_TRIP' && msg.action.data?.createdTrip && (
+                    <div className="mt-4 space-y-3">
+                      <p className="text-[10px] font-bold text-green-600 uppercase">Trajet Créé Avec Succès :</p>
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-xl border border-green-100 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs font-bold text-gray-900">
+                            {msg.action.data.createdTrip.departureLocation.name} → {msg.action.data.createdTrip.destinationLocation.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-gray-600 mb-1">
+                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {new Date(msg.action.data.createdTrip.departureTime).toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-gray-600">
+                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          {msg.action.data.createdTrip.availableSeats} places libres
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {msg.action?.type === 'REQUEST_TRIP_CONFIRMATION' && (
+                    <div className="mt-4 bg-white/60 rounded-xl p-4 border border-blue-100 shadow-sm">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg className="text-blue-500 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        Confirmer le trajet
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 mb-4 bg-white p-3 rounded-lg border border-gray-100">
+                        <div><span className="text-gray-400 block text-xs uppercase tracking-wider">Départ</span>{msg.action.data?.departure}</div>
+                        <div><span className="text-gray-400 block text-xs uppercase tracking-wider">Destination</span>{msg.action.data?.destination}</div>
+                        <div><span className="text-gray-400 block text-xs uppercase tracking-wider">Date</span>{msg.action.data?.date}</div>
+                        <div><span className="text-gray-400 block text-xs uppercase tracking-wider">Heure</span>{msg.action.data?.time}</div>
+                        <div><span className="text-gray-400 block text-xs uppercase tracking-wider">Détails</span>{msg.action.data?.seats} places • {msg.action.data?.price} DH</div>
+                      </div>
+                      
+                      {!msg.action.completed && (
+                        <div className="flex gap-2 mt-3">
+                          <button 
+                            onClick={() => {
+                              confirmTripCreation(msg.action);
+                            }}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+                          >
+                            Confirmer
+                          </button>
+                          <button 
+                            onClick={() => {
+                              msg.action.completed = true;
+                              sendSystemMessage("Non, je souhaite annuler ou modifier.");
+                            }}
+                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg transition-colors text-sm"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {msg.action && !msg.action.data?.results && !msg.action.data?.createdTrip && msg.action.type !== 'REQUEST_TRIP_CONFIRMATION' && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <div className="flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-widest">
                         <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
-                        Action: {msg.action.type.replace('_', ' ')}
+                        Action: {msg.action.type?.replace('_', ' ')}
                       </div>
                     </div>
                   )}

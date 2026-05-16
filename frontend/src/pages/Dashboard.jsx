@@ -73,7 +73,18 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData(true);
     const interval = setInterval(() => fetchData(false), 30000);
-    return () => clearInterval(interval);
+
+    // Refresh when AI agent creates a trip
+    const handleTripCreated = () => {
+      fetchData(false);
+      setActiveTab('driver'); // Switch to Driver tab automatically
+    };
+    window.addEventListener('omni:trip-created', handleTripCreated);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('omni:trip-created', handleTripCreated);
+    };
   }, [fetchData]);
 
   const handleUpdateResStatus = async (resId, status) => {

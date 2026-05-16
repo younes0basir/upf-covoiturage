@@ -18,7 +18,7 @@ public class AiController {
     private final AiService aiService;
 
     @PostMapping("/chat")
-    public Mono<AiResponse> chat(@RequestBody AiRequest request) {
-        return aiService.processChat(request);
+    public Mono<AiResponse> chat(@RequestBody AiRequest request, java.security.Principal principal) {
+        return aiService.processChat(request, principal);
     }
 }
