@@ -14,6 +14,7 @@ import CompleteDriverProfile from './pages/CompleteDriverProfile';
 import Account from './pages/Account';
 import VerifyEmail from './pages/VerifyEmail';
 import AdminDashboard from './pages/AdminDashboard';
+import OmniAssistant from './components/ai/OmniAssistant';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -72,6 +73,7 @@ function App() {
                 } 
               />
             </Routes>
+            <OmniAssistant />
           </div>
         </Router>
       </AuthProvider>

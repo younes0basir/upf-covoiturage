@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/locations/**").permitAll()
                 .requestMatchers("/ws-chat/**").permitAll()
+                .requestMatchers("/api/ai/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/trips/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

@@ -10,7 +10,7 @@ frontend/dist/
 frontend-angular/node_modules/
 frontend-angular/dist/
 .idea
-
+docs
 # IDE
 .idea/
 *.iml
