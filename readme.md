@@ -15,7 +15,7 @@ The platform mainly focuses on rides:
 - From UPF Fès back home
 - To other destinations when needed
 
-This solution helps students reduce transportation costs, improve mobility, and create a trusted student ride-sharing community.
+This solution helps  students reduce transportation costs, improve mobility, and create a trusted student ride-sharing community.
 
 ---
 
