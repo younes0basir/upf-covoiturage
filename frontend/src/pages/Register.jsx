@@ -195,8 +195,8 @@ const Register = () => {
     
     if (!formData.email) {
       newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please use a valid email address';
+    } else if (!/^[^\s@]+@upf\.ac\.ma$/.test(formData.email)) {
+      newErrors.email = 'Please use a valid @upf.ac.ma email address';
     }
     
     if (!formData.password) {
@@ -382,7 +382,7 @@ const Register = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="votre.email@exemple.com"
+                placeholder="name.surname@upf.ac.ma"
                 error={errors.email}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,7 +519,7 @@ const Register = () => {
             {/* Academic Note */}
             <div className="mt-6 text-center">
               <p className="text-[10px] text-gray-400">
-                Utilisez votre adresse email académique ou personnelle
+                Only valid @upf.ac.ma academic email addresses are accepted
               </p>
             </div>
           </div>
