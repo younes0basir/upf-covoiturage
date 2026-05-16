@@ -6,7 +6,7 @@ The application allows students to publish rides, search available trips, reserv
 ---
 
 ## Project Objective
-
+ 
 The goal of this project is to create a secure and smart carpooling system for university students.
 
 The platform mainly focuses on rides:
