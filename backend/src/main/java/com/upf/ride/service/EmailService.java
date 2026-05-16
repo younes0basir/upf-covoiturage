@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Map;
 
@@ -18,6 +19,7 @@ public class EmailService {
     private String fromEmail;
 
     public EmailService(@Value("${app.resend.api-key}") String apiKey) {
+        log.info("EmailService initialized with from-email config. API key present: {}", apiKey != null && !apiKey.equals("placeholder"));
         this.resendClient = WebClient.builder()
                 .baseUrl("https://api.resend.com")
                 .defaultHeader("Authorization", "Bearer " + apiKey)
@@ -27,6 +29,7 @@ public class EmailService {
 
     @Async
     public void sendVerificationCode(String toEmail, String firstName, String code) {
+        log.info("Attempting to send verification email to: {}", toEmail);
         try {
             String html = """
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
@@ -63,6 +66,8 @@ public class EmailService {
                 "html", html
             );
 
+            log.info("Sending email via Resend: from={}, to={}", fromEmail, toEmail);
+
             String response = resendClient.post()
                     .uri("/emails")
                     .bodyValue(emailBody)
@@ -70,9 +75,12 @@ public class EmailService {
                     .bodyToMono(String.class)
                     .block();
 
-            log.info("Resend email sent to {}: {}", toEmail, response);
+            log.info("Resend email sent successfully to {}: {}", toEmail, response);
+        } catch (WebClientResponseException e) {
+            log.error("Resend API error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Erreur Resend: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage());
+            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage(), e);
             throw new RuntimeException("Erreur lors de l'envoi de l'email de vérification", e);
         }
     }
