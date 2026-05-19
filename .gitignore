@@ -15,3 +15,4 @@ docs
 .idea/
 *.iml
 .vscode/
+.refact/

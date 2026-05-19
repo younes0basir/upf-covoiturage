@@ -21,9 +21,11 @@ class ChatService {
         }
 
         const token = localStorage.getItem('token');
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+        const wsUrl = apiBaseUrl.replace(/\/$/, '') + '/ws-chat';
 
         this.client = new Client({
-            webSocketFactory: () => new SockJS('/ws-chat'),
+            webSocketFactory: () => new SockJS(wsUrl),
             connectHeaders: {
                 Authorization: `Bearer ${token}`
             },
