@@ -343,10 +343,10 @@ const CreateTrip = () => {
                 <div className="grid grid-cols-2 gap-8">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest ml-1">Places</label>
-                    <div className="flex items-center space-x-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
-                      <button type="button" onClick={() => setFormData({...formData, availableSeats: Math.max(1, formData.availableSeats - 1)})} className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white transition font-bold text-xl">-</button>
-                      <input type="number" readOnly className="flex-grow text-center bg-transparent border-0 font-bold text-lg focus:ring-0" value={formData.availableSeats} />
-                      <button type="button" onClick={() => setFormData({...formData, availableSeats: Math.min(8, formData.availableSeats + 1)})} className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white transition font-bold text-xl">+</button>
+                    <div className="flex items-center justify-between bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                      <button type="button" onClick={() => setFormData({...formData, availableSeats: Math.max(1, formData.availableSeats - 1)})} className="w-12 h-12 shrink-0 flex items-center justify-center bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white transition font-bold text-xl">-</button>
+                      <input type="text" readOnly className="w-12 text-center bg-transparent border-0 font-bold text-lg focus:ring-0 p-0" value={formData.availableSeats} />
+                      <button type="button" onClick={() => setFormData({...formData, availableSeats: Math.min(8, formData.availableSeats + 1)})} className="w-12 h-12 shrink-0 flex items-center justify-center bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white transition font-bold text-xl">+</button>
                     </div>
                   </div>
                   <div>
