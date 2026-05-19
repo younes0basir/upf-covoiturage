@@ -139,9 +139,19 @@ public class AiService {
         messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT + "\n\n" + userContext));
         
         if (request.getHistory() != null) {
-            request.getHistory().forEach(h -> 
-                messages.add(Map.of("role", h.getRole(), "content", h.getContent()))
-            );
+            request.getHistory().forEach(h -> {
+                String role = h.getRole();
+                String content = h.getContent();
+                if ("assistant".equals(role) && content != null && !content.trim().startsWith("{")) {
+                    String escaped = content
+                            .replace("\\", "\\\\")
+                            .replace("\"", "\\\"")
+                            .replace("\n", "\\n")
+                            .replace("\r", "");
+                    content = "{\"thought\": \"Assistant response\", \"response\": \"" + escaped + "\", \"action\": null}";
+                }
+                messages.add(Map.of("role", role != null ? role : "user", "content", content != null ? content : ""));
+            });
         }
         
         messages.add(Map.of("role", "user", "content", request.getMessage()));
